@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agency Family Tree 2026</title>
+<meta name="description" content="Interactive global agency family tree: holding companies, agency groups and service categories, with a 2026 edition and a version updated for industry changes.">
+<meta name="theme-color" content="#ffffff" id="themeColor">
+<meta property="og:title" content="Agency Family Tree 2026">
+<meta property="og:description" content="Explore the global agency ecosystem by holding company and service category, with tracked 2026 industry changes.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>
+/* Apply the saved theme before first paint to avoid a flash. */
+(function(){try{var t=localStorage.getItem("aft-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,500..800&family=Instrument+Sans:wght@400..700&display=swap">
+<style>
+/* Layout: poster anatomy. A vertical brand band on the left, holding-company stacks
+   flowing as columns, a sticky control bar, and the legend docked at the bottom as the filter. */
+:root{
+  --bg:#ffffff; --surface:#f4f5fc; --dock:rgba(255,255,255,.96);
+  --ink:#16163d; --muted:#585b7d; --line:#e6e7f1; --line-strong:#cfd1e6;
+  --brand:#3b30f4; --brand-ink:#3b30f4; --band:#3b30f4; --on-brand:#ffffff;
+  --brand-wash:rgba(59,48,244,.07); --rule:#16163d; --shadow:rgba(22,22,61,.30);
+  --hl:#fff0a0; --focus:#3b30f4;
+  --mk-new:#13a157; --mk-moved:#3b30f4; --mk-merging:#e07b00; --mk-note:#6d4fe0; --mk-watch:#7d8099;
+  --font-display:"Bricolage Grotesque",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+  /* category colors, shared by both themes */
+  --CO:#f4845f; --Bal:#c2185b; --DaC:#6d4fe0; --DC:#3f51d9; --DM:#1e88e5; --EX:#29a9e8; --HC:#12b5a6;
+  --IC:#e53935; --IM:#0f8a6e; --PaC:#7cc242; --PRO:#f6c431; --RE:#f7a531; --RaE:#f26a21; --Sal:#f25c78; --OS:#4b4f5c;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d0e1f; --surface:#15173a; --dock:rgba(13,14,31,.96);
+  --ink:#e8e9f7; --muted:#9ea2c4; --line:#22254a; --line-strong:#33375f;
+  --brand:#3b30f4; --brand-ink:#9690ff; --band:#3b30f4; --hl:#5b4c00; --focus:#9690ff;
+  --brand-wash:rgba(150,144,255,.10); --rule:#a6a9d9; --shadow:rgba(0,0,0,.6);
+  --mk-moved:#6f68ff; --mk-watch:#6a6e8c; --OS:#6b7080;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d0e1f; --surface:#15173a; --dock:rgba(13,14,31,.96);
+  --ink:#e8e9f7; --muted:#9ea2c4; --line:#22254a; --line-strong:#33375f;
+  --brand:#3b30f4; --brand-ink:#9690ff; --band:#3b30f4; --hl:#5b4c00; --focus:#9690ff;
+  --brand-wash:rgba(150,144,255,.10); --rule:#a6a9d9; --shadow:rgba(0,0,0,.6);
+  --mk-moved:#6f68ff; --mk-watch:#6a6e8c; --OS:#6b7080;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+::selection{background:var(--brand);color:#fff}
+input{caret-color:var(--brand-ink)}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+a{color:var(--brand-ink);text-underline-offset:.18em;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+
+.app{display:grid;grid-template-columns:64px minmax(0,1fr);min-height:100vh}
+.band{background:var(--band);color:var(--on-brand);position:sticky;top:env(safe-area-inset-top,0px);height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1.4rem 0 10.5rem;padding-left:env(safe-area-inset-left,0px)}
+.band-year{font-family:var(--font-display);font-weight:800;font-size:.78rem;letter-spacing:.06em;font-variant-numeric:tabular-nums;opacity:.9;
+  width:2rem;padding-top:.5rem;border-top:2px solid currentColor;text-align:center}
+.band-title{writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--font-display);font-size:1.3rem;letter-spacing:-.005em;white-space:nowrap;line-height:1}
+.band-title b{font-weight:800}
+.band-title span{font-weight:500;opacity:.9}
+.band-title i{font-style:normal;font-weight:500;opacity:.7;font-size:.72em}
+
+.main{min-width:0;padding-right:max(16px,env(safe-area-inset-right,0px));padding-left:28px;padding-bottom:12rem}
+
+/* control bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--rule);
+  display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1.1rem;padding-block:.75rem .6rem}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line-strong);border-radius:9px;padding:3px;gap:2px}
+.seg button{font-family:var(--font-display);font-weight:700;font-size:.82rem;padding:.4rem .85rem;border-radius:6px;color:var(--ink);display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap;transition:background-color .18s var(--ease),color .18s var(--ease)}
+.seg button:hover{background:var(--brand-wash)}
+.seg button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand)}
+.seg .ct{font-size:.64rem;font-variant-numeric:tabular-nums;background:var(--mk-new);color:#fff;border-radius:999px;padding:.08rem .38rem;min-width:1.3rem;text-align:center}
+.sync{display:inline-flex;align-items:center;gap:.45rem;font-size:.74rem;color:var(--muted)}
+.sync::before{content:"";width:.45rem;height:.45rem;border-radius:50%;background:var(--mk-new)}
+.search{flex:1 1 220px;max-width:340px;position:relative;margin-left:auto}
+.search input{width:100%;font:inherit;font-size:.86rem;padding:.5rem 2.2rem .5rem 2.05rem;border:1px solid var(--line-strong);border-radius:8px;background:var(--bg);color:var(--ink);transition:border-color .15s,box-shadow .15s}
+.search input::placeholder{color:var(--muted);opacity:1}
+.search input:hover{border-color:var(--muted)}
+.search input:focus-visible{outline:none;border-color:var(--brand-ink);box-shadow:0 0 0 3px var(--brand-wash)}
+.search svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted)}
+.search kbd{position:absolute;right:.55rem;top:50%;transform:translateY(-50%);font:600 .68rem/1 var(--font-display);color:var(--muted);border:1px solid var(--line-strong);border-radius:4px;padding:.2rem .36rem;pointer-events:none;background:var(--surface)}
+.search input:focus ~ kbd,.search input:not(:placeholder-shown) ~ kbd{display:none}
+@media (hover:none){.search kbd{display:none}}
+.opt{display:inline-flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted);cursor:pointer;user-select:none}
+.opt:hover{color:var(--ink)}
+.opt input{accent-color:var(--brand)}
+.theme-btn{display:inline-flex;align-items:center;gap:.4rem;font-size:.76rem;font-weight:600;color:var(--ink);border:1px solid var(--line-strong);border-radius:8px;padding:.38rem .7rem .38rem .55rem;background:var(--bg);transition:background-color .15s,border-color .15s}
+.theme-btn:hover{background:var(--surface);border-color:var(--muted)}
+.theme-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ghost-btn{font-size:.78rem;color:var(--brand-ink);font-weight:600;padding:.35rem .3rem;border-radius:4px;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .25s var(--ease)}
+.ghost-btn:hover{background-size:100% 1px}
+.stats{width:100%;font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:.2rem 0}
+.stats>span+span::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--line-strong);vertical-align:middle;margin:0 .7rem}
+.stats b{color:var(--ink);font-weight:700}
+.stats .d-new{color:var(--mk-new);font-weight:700}
+
+/* display face runs slightly condensed so names fit the narrow columns */
+.hname,.ghead,.division,.band-title,.band-year,.dname,.ctitle,.info h2,.seg button,.badge,.mk,.st,.dock-top h3,.dk,.hicon,.mkdot,.search kbd{font-stretch:86%}
+
+/* tree */
+.tree{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:2rem 1.6rem;padding-top:1.5rem;align-items:start}
+.stack{min-width:0;display:flex;flex-direction:column;gap:2.4rem}
+@media (max-width:1279px){ .tree{display:block;columns:230px;column-gap:1.75rem} .stack{display:contents} .holdco{margin-bottom:2.2rem} }
+.holdco{min-width:0}
+.hname{display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-weight:800;font-size:1.15rem;line-height:1.08;letter-spacing:-.012em;color:var(--ink);margin:0 0 .5rem;padding-bottom:.55rem;border-bottom:2px solid var(--rule);break-after:avoid;text-wrap:balance}
+.hname .hn{flex:1;min-width:0}
+.hcount{flex:none;align-self:flex-end;font-family:var(--font-body);font-weight:500;font-size:.68rem;letter-spacing:0;color:var(--muted);font-variant-numeric:tabular-nums}
+.hicon{flex:none;width:1.9rem;height:1.9rem;border-radius:7px;background:var(--brand);display:grid;place-items:center}
+.hicon svg{width:1.15rem;height:1.15rem;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hnote{display:block;width:100%;text-align:left;font-size:.72rem;line-height:1.35;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:.45rem .6rem;margin:0 0 .6rem;border-radius:6px;break-inside:avoid;transition:border-color .15s}
+.hnote:hover{border-color:var(--mk-note)}
+.hnote b{font-weight:600}
+.hnote small{display:block;color:var(--muted);font-size:.64rem;margin-bottom:.15rem;font-variant-numeric:tabular-nums}
+.division{display:flex;align-items:center;gap:.5rem;font-family:var(--font-display);font-weight:800;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin:1rem 0 .2rem;break-after:avoid;width:100%;text-align:left}
+.division::after{content:"";flex:1;height:1px;background:var(--rule);opacity:.35}
+.division:hover{color:var(--brand-ink)}
+.division .mk{letter-spacing:.06em}
+.gblock{break-inside:avoid;margin-bottom:.5rem}
+.ghead{display:flex;align-items:center;gap:.45rem;width:100%;text-align:left;font-family:var(--font-display);font-weight:800;font-size:.84rem;line-height:1.2;letter-spacing:-.005em;color:var(--brand-ink);padding:.4rem 0 .32rem;border-bottom:1px solid var(--line-strong)}
+.ghead:hover .gn{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.2em}
+.ghead .gn{flex:1;min-width:0}
+.ghead.section{color:var(--muted);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;padding-top:.7rem}
+.ghead.section:hover{color:var(--ink)}
+.plus{flex:none;width:1rem;height:1rem;border-radius:50%;background:var(--brand);position:relative;transition:transform .25s var(--ease)}
+.plus::before,.plus::after{content:"";position:absolute;left:50%;top:50%;width:.5rem;height:2px;background:#fff;transform:translate(-50%,-50%);border-radius:1px;transition:transform .25s var(--ease)}
+.plus::after{transform:translate(-50%,-50%) rotate(90deg)}
+.gblock:not(.collapsed) .plus::after{transform:translate(-50%,-50%) rotate(0deg)}
+.gcount{font-family:var(--font-body);font-weight:500;font-size:.68rem;letter-spacing:0;text-transform:none;color:var(--muted);display:none;font-variant-numeric:tabular-nums}
+.gblock.collapsed .gcount{display:inline}
+.gblock.collapsed .items{display:none}
+.row{display:flex;align-items:center;gap:.45rem;width:100%;text-align:left;padding:.2rem .25rem .2rem 1.45rem;border-bottom:1px solid var(--line);font-size:.81rem;line-height:1.25;min-height:1.9rem;transition:opacity .2s,background-color .12s,color .12s}
+.row.child{padding-left:2.4rem;font-size:.77rem;color:var(--muted)}
+.row.child .nm::before{content:"";display:inline-block;width:.55rem;height:.45rem;border-left:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);margin:0 .4rem .2rem -.95rem;vertical-align:middle}
+.row:hover{background:var(--brand-wash)}
+.row:hover .nm{color:var(--brand-ink)}
+.nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.nm mark{background:var(--hl);color:inherit;border-radius:2px}
+.badge{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:.52rem;letter-spacing:-.01em;color:#fff;background:var(--c);transition:transform .2s var(--ease)}
+.row:hover .badge,.ghead:hover .badge{transform:scale(1.08)}
+.badge.dark{color:#15142a}
+.mk{flex:none;font-family:var(--font-display);font-weight:800;font-size:.54rem;letter-spacing:.06em;text-transform:uppercase;padding:.14rem .34rem;border-radius:3px;color:#fff;background:var(--mkc)}
+.row.ghost{color:var(--muted);font-size:.72rem;flex-wrap:wrap;row-gap:0}
+.row.ghost .nm{flex:1 1 5rem;overflow-wrap:normal}
+.row.ghost .nm s{opacity:.7}
+.row.ghost .to{font-size:.66rem;color:var(--mk-moved);font-weight:600;white-space:nowrap}
+.flash{animation:flash 1.8s ease-out 1}
+@keyframes flash{0%,30%{background:color-mix(in srgb,var(--brand) 24%,transparent)}100%{background:transparent}}
+
+/* one authored moment: columns settle in when the chart (re)renders */
+@keyframes settle{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.holdco{animation:settle .45s var(--ease) both}
+.stack:nth-child(2) .holdco{animation-delay:.04s}
+.stack:nth-child(3) .holdco{animation-delay:.08s}
+.stack:nth-child(4) .holdco{animation-delay:.12s}
+.stack:nth-child(5) .holdco{animation-delay:.16s}
+.stack:nth-child(n+6) .holdco{animation-delay:.2s}
+
+/* filtering states */
+.tree.filtering .row.off,.tree.filtering .ghead.off{opacity:.14}
+.tree.filtering .row.on{background:var(--brand-wash)}
+.tree.hide .row.off{display:none}
+.tree.hide .gblock.empty,.tree.hide .holdco.empty,.tree.hide .division.empty,.tree.hide .hnote.empty{display:none}
+.tree.previewing .row:not(.pv),.tree.previewing .ghead:not(.pv){opacity:.18}
+.tree.previewing .row.pv{background:var(--brand-wash)}
+
+/* info: reads as an appendix, not a card */
+.info{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:2rem 3rem;margin-top:3.5rem;border-top:2px solid var(--rule);padding:1.4rem 0 0}
+@media (max-width:900px){.info{grid-template-columns:1fr}}
+.info h2{font-family:var(--font-display);font-weight:800;font-size:1.35rem;letter-spacing:-.015em;line-height:1.15;color:var(--ink);margin:0 0 .4rem;text-wrap:balance}
+.info > div + div h2{font-size:1rem;margin-top:1.5rem;padding-top:.9rem;border-top:1px solid var(--line-strong)}
+.info > div + div h2:first-child{margin-top:0;padding-top:0;border-top:0}
+.info p{font-size:.84rem;line-height:1.6;color:var(--ink);max-width:62ch;margin:.3rem 0 .9rem}
+.info .lede{color:var(--muted);font-size:.8rem}
+.clog{list-style:none;margin:.8rem 0 0;padding:0;display:flex;flex-direction:column}
+.clog li{display:grid;grid-template-columns:6.4rem minmax(0,1fr);gap:.2rem 1.2rem;padding:.9rem 0;border-top:1px solid var(--line-strong)}
+@media (max-width:560px){.clog li{grid-template-columns:1fr}}
+.cdate{font-size:.74rem;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;gap:.4rem;align-items:flex-start}
+.st{font-family:var(--font-display);font-weight:800;font-size:.58rem;letter-spacing:.07em;text-transform:uppercase;padding:.16rem .4rem;border-radius:3px;border:1.5px solid var(--sc);color:var(--sc);background:color-mix(in srgb,var(--sc) 8%,transparent)}
+.ctitle{font-family:var(--font-display);font-weight:700;font-size:.92rem;line-height:1.3;letter-spacing:-.005em;text-wrap:balance}
+.cbody{font-size:.8rem;line-height:1.55;color:var(--muted);margin:.25rem 0 .5rem;max-width:68ch}
+.cmeta{display:flex;flex-wrap:wrap;gap:.3rem 1rem;font-size:.74rem;align-items:center}
+.cmeta button{color:var(--brand-ink);font-weight:700;border:1px solid var(--line-strong);border-radius:5px;padding:.15rem .5rem;transition:background-color .15s,border-color .15s}
+.cmeta button:hover{background:var(--brand-wash);border-color:var(--brand-ink)}
+.cmeta .hc{color:var(--muted);font-weight:600}
+.cmeta a{font-weight:500}
+
+/* legend dock */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--dock);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:2px solid var(--rule);
+  padding:.55rem max(16px,env(safe-area-inset-right,0px)) calc(.65rem + env(safe-area-inset-bottom,0px)) calc(64px + 28px)}
+@media (max-width:720px){.dock{padding-left:max(16px,env(safe-area-inset-left,0px))}}
+.dock-top{display:flex;align-items:baseline;gap:.9rem;flex-wrap:wrap;margin-bottom:.45rem}
+.dock-top h3{font-family:var(--font-display);font-weight:800;font-size:.8rem;letter-spacing:-.005em;margin:0;color:var(--ink)}
+.dock-top .hint{font-size:.7rem;color:var(--muted)}
+.dock-top .sp{flex:1}
+.legend{display:flex;flex-wrap:wrap;gap:.25rem}
+.dock.min .legend,.dock.min .hint{display:none}
+.dock.min .dock-top{margin-bottom:0}
+.lg{display:inline-flex;align-items:center;gap:.4rem;padding:.15rem .55rem .15rem .15rem;border-radius:999px;border:1px solid transparent;background:var(--surface);font-size:.72rem;line-height:1.1;transition:opacity .2s,background-color .15s,border-color .15s,color .15s}
+.lg:hover{border-color:var(--line-strong);background:var(--bg)}
+.lg .badge{width:1.35rem;height:1.35rem;font-size:.48rem}
+.lg .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.66rem}
+.lg[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.lg[aria-pressed="true"] .n{color:inherit;opacity:.7}
+.legend.active .lg[aria-pressed="false"]{opacity:.45}
+.legend.active .lg[aria-pressed="false"]:hover{opacity:.9}
+.lg .plus{width:1.35rem;height:1.35rem}
+.lg .plus::before,.lg .plus::after{width:.7rem}
+.lg-sep{width:1px;align-self:stretch;background:var(--line-strong);margin:.1rem .35rem}
+.lg .mkdot{width:1.35rem;height:1.35rem;border-radius:50%;background:var(--mkc);display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:800;font-size:.54rem}
+@media (max-width:720px){ .legend{flex-wrap:nowrap;overflow-x:auto;padding-bottom:.25rem;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent} .lg{flex:none} .hint{display:none} }
+
+/* detail drawer */
+.drawer{position:fixed;z-index:40;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 6rem);width:min(360px,calc(100vw - 32px));max-height:calc(100vh - 17rem);overflow:auto;
+  background:var(--bg);border:1px solid var(--rule);border-radius:10px;box-shadow:0 2px 4px -2px var(--shadow),0 22px 40px -18px var(--shadow);padding:1.15rem 1.25rem 1.2rem;animation:drawer-in .28s var(--ease) both;scrollbar-width:thin}
+@keyframes drawer-in{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
+@media (max-width:720px){.drawer{top:auto;bottom:calc(9rem + env(safe-area-inset-bottom,0px));right:16px;left:16px;width:auto;max-height:50vh;animation-name:drawer-up}}
+@keyframes drawer-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.drawer .x{position:absolute;top:.55rem;right:.6rem;font-size:1.3rem;line-height:1;color:var(--muted);width:2rem;height:2rem;border-radius:6px;transition:background-color .15s,color .15s}
+.drawer .x:hover{background:var(--surface);color:var(--ink)}
+.dk{font-family:var(--font-display);font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.dname{font-family:var(--font-display);font-weight:800;font-size:1.4rem;line-height:1.1;letter-spacing:-.02em;margin:.35rem 2rem .45rem 0;text-wrap:balance}
+.dpath{font-size:.78rem;color:var(--muted);margin-bottom:.9rem;padding-bottom:.8rem;border-bottom:1px solid var(--line)}
+.dtag{display:flex;align-items:center;gap:.55rem;font-size:.84rem;font-weight:500;margin-bottom:.9rem}
+.dchange{border-top:1px solid var(--line-strong);padding-top:.85rem;margin-top:.9rem}
+.dchange .ctitle{margin:.55rem 0 .2rem}
+.dsibs{font-size:.76rem;color:var(--muted);line-height:1.55}
+.dsibs button{color:var(--brand-ink)}
+
+@media (max-width:720px){
+  .app{grid-template-columns:1fr}
+  .band{position:static;height:auto;flex-direction:row;align-items:baseline;padding:.9rem max(16px,env(safe-area-inset-left,0px));justify-content:flex-start;gap:.8rem}
+  .band-year{order:2;width:auto;border-top:0;padding:0;opacity:.7}
+  .band-title{writing-mode:horizontal-tb;transform:none;font-size:1.15rem;white-space:normal}
+  .main{padding-left:max(16px,env(safe-area-inset-left,0px))}
+  .bar{position:static;gap:.55rem .8rem}
+  .stats{gap:.2rem .9rem}
+  .stats>span+span::before{display:none}
+  .search{margin-left:0;max-width:none;flex-basis:100%;order:5}
+  .sync{flex-basis:100%}
+}
+@media (prefers-reduced-motion: reduce){ *,*::before,*::after{transition:none!important;animation:none!important} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="band" aria-label="Chart title">
+    <span class="band-year" aria-hidden="true">2026</span>
+    <div class="band-title"><b>Agency Family Tree</b> <span>| Global 2026</span> <i id="bandVer"></i></div>
+  </aside>
+
+  <main class="main">
+    <div class="bar" role="toolbar" aria-label="Chart controls">
+      <div class="seg" role="group" aria-label="Chart version">
+        <button id="vEdition" aria-pressed="true">2026 Edition</button>
+        <button id="vLatest" aria-pressed="false">Latest <span class="ct" id="chgCount">0</span></button>
+      </div>
+      <span class="sync" id="syncLbl">Synced with industry news · 23 Nov 2026</span>
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input id="q" type="search" placeholder="Find an agency" autocomplete="off" aria-label="Find an agency"><kbd aria-hidden="true">/</kbd></label>
+      <label class="opt"><input id="hideMode" type="checkbox"> Hide non-matches</label>
+      <button class="ghost-btn" id="collapseAll">Collapse all groups</button>
+      <button class="theme-btn" id="themeBtn" type="button"></button>
+      <div class="stats" id="stats" aria-live="polite"></div>
+    </div>
+
+    <div class="tree" id="tree"></div>
+
+    <section class="info" id="about">
+      <div>
+        <h2>What changed since the 2026 edition</h2>
+        <p class="lede" id="clogLede"></p>
+        <ol class="clog" id="clog"></ol>
+      </div>
+      <div>
+        <h2>Agency selection</h2>
+        <p>Thousands of agencies make up the marketing ecosystem and most are not on this chart. Inclusion weighs an agency's position, name recognition, size and geographic footprint.</p>
+        <h2>About the two versions</h2>
+        <p><b>2026 Edition</b> reproduces the structure of mediasense's <i>Global Agency Family Tree 2026</i> PDF: ten columns of holding companies and networks, their agency groups (⊕) and each agency's primary service category.</p>
+        <p><b>Latest</b> is the 2026 Edition plus every tracked change listed here, applied to the chart: acquisitions, moves between groups, restructures, mergers in progress and items to watch. Each change carries its date, status and source. Click any marked agency for details.</p>
+        <p class="lede">Source: reconstructed from mediasense's <i>Global Agency Family Tree 2026</i>. Updates compiled from public trade press and company filings.</p>
+        <p class="lede">Statuses: <b>Completed</b> deal closed or change in effect · <b>Announced</b> agreed, close not yet confirmed · <b>Merging</b> integration under way · <b>Reported</b> trade press only · <b>Watch</b> talks or a possible sale, nothing agreed.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<aside class="drawer" id="drawer" hidden aria-live="polite"></aside>
+
+<div class="dock" id="dock">
+  <div class="dock-top">
+    <h3>Legend</h3>
+    <span class="hint">Click to filter, select several to combine, hover to preview</span>
+    <span class="sp"></span>
+    <button class="ghost-btn" id="clearF" hidden>Clear filters</button>
+    <button class="ghost-btn" id="dockToggle" aria-expanded="true">Hide legend</button>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<script type="text/plain" id="base">
+# Omnicom
++ BBDO | IC
++ McCann | IC
++ TBWA\ | IC
++ Omnicom Advertising
+alma | IC
+antoni | IC
+Carmichael Lynch | IC
+Deutsch | IC
+dieste | IC
+Goodby Silverstein & Partners | IC
+Grabarz & Partner | IC
+GSD&M | IC
+Lucky Generals | IC
+Merkley+Partners | IC
+The Martin Agency | IC
+TMA | IC
+Zimmerman Advertising | IC
++ Omnicom Branding
+FutureBrand | Bal
+Interbrand | Bal
+Siegel+Gale | Bal
+Sterling Brands | Bal
+Wolff Olins | Bal
++ Omnicom Commerce
+Flywheel | RaE
+Haygarth | RaE
+Tracy-Locke | RaE
++ Omnicom Experiential
+Auditoire | EX
+GMR | EX
+Momentum | EX
+Octagon | EX
++ Omnicom Health
+Adelphi | HC
+AREA 23 | HC
+Biolumina | HC
+FCB Health | HC
+Neon | HC
+Omnicom Health Market Access | HC
+Omnicom Health Medical Communications | HC
+Propeller | HC
+REMEDY EDGE | HC
+Snow Companies | HC
++ Omnicom Media
+Acxiom | IM
+Hearts & Science | IM
+Initiative | IM
+Mediahub | IM
+OMD | IM
+PHD | IM
+UM | IM
++ Omnicom Precision Marketing
+Credera | DaC
+Critical Mass | DaC
+LeapPoint | DaC
+RAPP | DaC
+Targetbase | DaC
++ Omnicom Production
+Coffee & TV | PRO
+Mother Tongue | PRO
+NO6 | PRO
+Studio Rx | PRO
++ Omnicom Public Relations
+FleishmanHillard | PaC
+FP1 Strategies | PaC
+GMMB | PaC
+Golin | PaC
+Ketchum | PaC
+Mercury | PaC
+MMC | PaC
+PLUS Communications | PaC
+Porter Novelli | PaC
+Portland | PaC
+Weber Shandwick | PaC
+
+# Publicis Groupe
++ Leo Constellation
+Leo | IC
+Bcube | DC
+Carré Noir | Bal
+DPZ | IC
+Marcel | IC
+Publicis | IC
+Publicis Conseil | IC
+Publicis JimenezBasic | IC
+Publicis Luxe | IC
+Publicis Machine | IC
+Publicis Pro | IC
+Talent Marcel | IC
+Welcomm Publicis | IC
++ Saatchi & Saatchi
+Saatchi & Saatchi | IC
+Conill Advertising | DC
+Saatchi & Saatchi X | RaE
+Team One | IC
++ LePub | IC
++ BBH
+BBH | IC
+Zag | OS
++ Publicis Production
+Boomerang | PRO
+> Downtown Paris | IC
+Harbor | PRO
+Prodigious | PRO
++ MSL
+MSL | PaC
+> Salterbaxter MSL | PaC
++ Publicis Media
+Atomic 212° | IM
+Bizon | RaE
+Blue 449 | IM
+CJ Affiliate | DM
+Dysrupt | DM
+LeShop | RaE
+Performics | IM
+Picture Motion | CO
+Publicis Collective | DM
+Publicis Health Media | HC
+Publicis Media Connect | IM
+Publicis Media Exchange | IM
+Publicis Media Luxe | IM
+Publicis Sport & Entertainment | OS
+Spark Foundry | IM
+Starcom | IM
+Zenith | IM
++ Publicis Digital Experience
+Arc Worldwide | RaE
+CRMOne | DaC
+Digitas | DC
+> Publicis Pro | OS
+Level Studios | DC
+Mars United Commerce | RaE
+Profitero+ | RaE
+Razorfish | DC
++ Epsilon
+Epsilon | DaC
+Lotame | DaC
++ Influential
+Influential | Sal
+Captiv8 | Sal
++ Publicis Commerce
+Incentiv | RaE
+The Creative Counsel | RaE
++ Publicis Sapient
+Publicis Sapient | OS
+Corra | RaE
+Practia | OS
+Spinnaker | OS
+Tquila | OS
+Tremend | OS
++ Publicis Health
+Publicis Health | HC
+Digitas Health | HC
+Discovery | HC
+Heartbeat | HC
+Langland | HC
+p-value Group | HC
+Razorfish Health | HC
+Saatchi Health | HC
+= Other Agencies
+Beacon Communications | IC
+Fallon | IC
+Kekst CNC | PaC
+MetaDesign | Bal
+Nurun | DC
+PublicisLive | EX
+The Community | IC
+Turner Duckworth | Bal
+
+# WPP
++ AKQA Group
+AKQA | IC
+Aleph | DC
+ArcTouch | DM
+Made Thought | Bal
+Tank | IC
+Townhouse | PRO
++ Burson Group
+Burson | PaC
+Axicom | PaC
+Burson Buchanan | PaC
+Dewey Square Group | PaC
+GCI Health | PaC
+Hill & Knowlton | PaC
+JeffreyGroup | PaC
++ Landor Group
+Landor | Bal
+amp | Bal
+BDG | Bal
+CBA | Bal
+Coley Porter Bell | Bal
+ManvsMachine | Bal
++ Ogilvy
+Ogilvy | IC
+AQuest | IC
+Bower House Digital | EX
+DAVID | IC
+Eicoff | IC
+Grey | IC
+INGO | IC
+New Commercial Arts | IC
+Ogilvy Consulting | OS
+Ogilvy Health | HC
+Ogilvy One | EX
+Ogilvy PR | PaC
+Social.Lab | Sal
+The Lacek Group | EX
+thjnk | Bal
+Village Marketing | Sal
++ VML
+VML | IC
+Berlin Cameron | IC
+Contract Advertising | IC
+Corebiz | RaE
+Diff | RaE
+dti digital | OS
+Enext Consulting | RaE
+Folk VML | IC
+Gain Theory | DaC
+GTB | DM
+Hudson Rouge | IC
+Jüssi | EX
+Marketdata | DaC
+Mutato | DC
+Obviously | Sal
+Passport Brand Design | Bal
+Pennywise | EX
+pep | RaE
+Pmweb | DaC
+Scholz & Friends Family | IC
+TAXI | IC
+The Cocktail | EX
+Verticurl | DaC
+VML Consulting | OS
+VML Live | EX
+Zubi | DC
++ WPP Media
+WPP Media | IM
+choreograph | DaC
+EssenceMediacom | IM
+Mindshare | IM
+The Goat Agency | Sal
+Wavemaker | IM
++ WPP Production | PRO
+= Other Agencies
+Barrows | RaE
+Bottle Rocket | DM
+BPG Group | IC
+Cartwright | PaC
+Clarion Communications | Bal
+CMI Media Group | IM
+Design Bridge and Partners | Bal
+Foster | OS
+Icon Group | EX
+Johannes Leonardo | IC
+Majority | IC
+Peclers Paris | IC
+Satalia | OS
+Set Creative | EX
+SJR | Bal
+Smollan | RaE
+Spafax | EX
+SYZYGY GROUP | EX
+T&P | IM
+The Brand Power Company | RaE
+The Food Group | IC
+UWG | IC
+= Practices
+WPP Government & Public Sector | PaC
+WPP Sports | OS
+
+# Dentsu
++ dentsu | IM
++ TAG | IC
++ Carat | IM
++ dentsu X | IM
++ dentsu Creative | IC
++ iProspect
+iProspect | IM
+MuteSix | IM
++ Merkle
+Merkle | DaC
+DWA | DaC
+Gyro | DaC
+HelloWorld | DaC
+LiveArea | DaC
+Merkle b2b | DaC
+Merkle Cardinal Path | DaC
+Sokrati | DaC
+= Other Agencies
+Amnet | OS
+ICUC | DM
+MKTG | EX
+> MKTG Sports & Entertainment | EX
+Paragon | IM
+Posterscope | IM
+SMG | OS
+The Story Lab | IC
+
+# Hakuhodo
++ Hakuhodo
+Hakuhodo | IC
+Curiosity | IC
+eNAV Marketing Services | OS
+GIMC-Hakuhodo | IC
+Hakuhodo Integrated Communications Group | IC
+MA&TH Entertainment Network | IC
+Media Intelligence Group | IM
+PMG | IC
+Southpaw Communications | IC
+The Joy Agency | IC
++ Daiko Advertising | IC
++ YOMIKO Advertising | IC
++ Hakuhodo DY ONE
+Hakuhodo DY ONE | DC
+D.A.Consortium | DC
+Innity Corporation | DC
+IREP | DC
+spicebox | DC
++ SoldOut
+anddigital | DC
+MEDIA ENGINE | DC
+SO Technologies | DC
++ kyu
+kyu | IC
+Gehl | OS
+Godfrey Dadich Partners | IC
+IDEO | Bal
+Kepler Group | IC
+Lexington | OS
+Public Digital | OS
+Sid Lee | IC
+SYPartners | OS
+
+# Havas
++ Havas
+Havas | IC
+Arnold | IC
+Battery | IC
+Buzzman | IC
+H/Advisors | PaC
+Havas Edge | RaE
+Havas Events | EX
+Havas Formula | PaC
+Havas People | IC
+Havas Red | PaC
+One Green Bean | PaC
+Prose on Pixels | PRO
+Republica Havas | IC
+Shobiz | EX
+TRIPTK | Bal
+W Conran | Bal
++ Havas CX
+Havas CX | DaC
+Ekino | DaC
+Gate One | OS
+Havas Fullsix | DaC
+Helia CX | DaC
+Intellignos | DaC
+Think Design | Bal
++ BETC
+BETC | IC
+BETC Fullsix | DC
+Maison BETC | PRO
+Rosa Paris | IC
+Traction | IC
++ Havas Health
+Faze | HC
+Havas Life | HC
+Havas Lynx | HC
+Health Media Hub | HC
+Jacques | HC
+Republica Havas Health | HC
++ Havas Media Network
+Arena Media | IM
+Channel Bakers | RaE
+CSA | DaC
+Havas Market | RaE
+Havas Media | IM
+Havas Play | EX
+Ledger Bennett | IM
+PivotRoots | DM
+Socialyse | Sal
+= Other Agencies
+Uncommon | IC
+
+# Cheil
++ Cheil Worldwide
+Cheil | IC
+Barbarian | DC
+BMB | IC
+Cheil Centrade | DC
+ColourData | DaC
+Experience Commerce | DC
+Iris | IC
+McKinney | IC
+One RX | RaE
+Social Beat | DC
+
+# Stagwell
++ Alliance
+Anomaly | IC
+Unreasonable Studios | PRO
+What's Next Partners | IC
++ Constellation
+72andSunny | IC
+Colle McVoy | IC
+Crispin | IC
+Hunter | PaC
+Jemini | OS
+Movers+Shakers | Sal
+Redscout | Bal
+TEAM | EX
+> Gold Rabbit Sports | EX
+The Harris Poll | RE
+Tinsel | EX
++ Doner Partner Network
+Doner | IC
+DonerNorth | IC
+Dyversity Communications | PaC
+Harris X | RE
+Luxine | PaC
+Meat & Produce | Sal
+Underground | PRO
+Veritas | PaC
+Yamamoto | IC
++ Brand X Performance
+Assembly | IM
+Assembly Digital Commerce | RaE
+CPB | IC
+Forsman & Bodenfors | IC
+GALE | DM
+Goodstuff | DM
+INK | DM
+Kenna | RaE
+Locaria | CO
+Vitro | IC
++ Communications & Advocacy Group
+Allison | PaC
+Mono | IC
+SKDK | PaC
+Sloane | PaC
+Targeted Victory | PaC
++ Code and Theory
+Code and Theory | DC
+Instrument | Bal
+Kettle | Sal
+Left Field Labs | OS
+Rhythm | DC
+TrueLogic | DC
++ Stagwell
+Consulum | OS
+JetFuel | EX
+Multiview | DM
+National Research Group | RE
+The Marketing Cloud | DaC
+TradeX Partners | OS
+Unicepta | RE
+
+# Independents & Networks
+= Independent agencies
+Akcelo | EX
+Amplify | IC
+Amsive | DaC
+Ansira | DaC
+Artefact | DaC
+Avalere Health | HC
+Bader Rutter | OS
+Billion Dollar Boy | Sal
+Brainlabs | IM
+broadhead | DaC
+Brunswick Group | PaC
+Burrell | DC
+Clinch | OS
+Clozette | Sal
+Cramer-Krasselt | IC
+Croud | DC
+Derse | EX
+Edelman | PaC
+eight&four Group | Sal
+Emperor | IC
+Eversana Intouch | HC
+Fantasy | DC
+Freeman | EX
+Good Apple | HC
+Gradial | OS
+Green Park | DM
+Harte Hanks | OS
+Highdive | IC
+Horizon Media | DM
+ICF Next | DaC
+iCrossing | DM
+Imagination | EX
+isobel | IC
+IZEA | Sal
+Jack Morton | EX
+LiveRamp | DaC
+M+C Saatchi | IC
+Mediakeys | IM
+MERGE | HC
+Mindgruve | DaC
+MOCEAN | IC
+Mother | IC
+Pablo | IC
+Propelis | Bal
+Real Chemistry | HC
+Reply | DC
+R/GA | IC
+RPA | IC
+Samy | Sal
+TEAM LEWIS | IC
+The Marketing Store | IC
+tmp | IC
+Transmission | IC
+TRG | IC
+USIM | IM
+Valtech | DC
+We. Communications | PaC
+Whalar | Sal
+Wieden+Kennedy | IC
+Wpromote | OS
++ Acceleration CC
++ Ariadna
++ by The Network
++ Chime Communications
+VCCP | IC
++ Cosmo5
++ DRPG
++ INNOCEAN
+Canvas Worldwide | IM
+Wellcom Worldwide | PRO
++ Klick Health
++ Local Planet
++ Match Marketing
++ MSQ
++ Next 15 Group
++ Project Worldwide
+George P. Johnson | EX
+Partners + Napier | IC
+Praytell | PaC
++ Serviceplan
++ Sideshow Group
++ Syneos Health
+Cadent | HC
+GSW | HC
++ Tadiem
++ The Capel Group
++ The Opus Group
++ TIPi Group
++ VaynerX
+
+# Consultancies & Other
++ Accenture
+Accenture Song | DaC
+Droga5 | IC
++ Attivo
+303 | IC
+DNY | IC
+Gorilla | PRO
+Hill Holliday | IC
++ The Brandtech Group
+55 | DaC
+collectively | Sal
+Gravity Road | DC
+Jellyfish | DM
+Mobkoi | DC
+Oliver | OS
++ Deloitte
+Deloitte Digital | DC
++ DEPT
++ Globant
+GUT | IC
++ IBM
+IBM iX | DC
++ Plus Company
+Citizen Relations | PaC
+Cossette | IC
+Cossette Media | IM
+Mekanism | Bal
+Munvo | OS
+We Are Social | Sal
++ PwC
+PwC Digital Services | DC
++ S4 Capital
+Monks | IM
++ Worldwide Partners
+Blue Chip | IC
+Brownstein | IC
+Delve Deeper | RE
+Digo | OS
+Giant Spoon | IC
+Godfrey | IC
+LG2 | IC
+Lippe Taylor | PaC
+Mediassociates | DM
+Monigle | Bal
+Moroch | IC
+Odysseus Arms | IC
+Propeg | IC
+t2ó | DM
+The Shipyard | IC
+tigerbond | IC
+Tombras | IC
+Zambezi | IC
+</script>
+
+<script>
+/* ---------- Reference data ---------- */
+const TAGS = {
+  CO:"Content", Bal:"Branding & Identity", DaC:"Data & CRM", DC:"Digital Creative", DM:"Digital Media",
+  EX:"Experiential", HC:"Healthcare", IC:"Integrated Creative", IM:"Integrated Media", PaC:"PR & Comms",
+  PRO:"Production", RE:"Research", RaE:"Retail & e-Commerce", Sal:"Social & Influencer", OS:"Other Services"
+};
+const DARK_TEXT = new Set(["PRO","RE","PaC","CO","EX","HC","RaE","Sal"]);
+const MARKS = { new:"New", moved:"Moved", merging:"Merging", note:"Update", watch:"Watch" };
+const STATUS = { Completed:"var(--mk-new)", Announced:"var(--mk-moved)", Merging:"var(--mk-merging)", Reported:"var(--mk-note)", Watch:"var(--mk-watch)" };
+const STACKS = [["Omnicom"],["Publicis Groupe"],["WPP"],["Dentsu","Hakuhodo"],["Havas","Cheil"],["Stagwell"],["Independents & Networks"],["Consultancies & Other"]];
+const SYNCED = "23 Nov 2026";
+/* Flat symbol per holding company (generic glyphs, not company logos). */
+const HOLDCO_ICONS = {
+  "Omnicom":'<circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9.5" ry="4.2"/>',
+  "Publicis Groupe":'<path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/>',
+  "WPP":'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+  "Dentsu":'<path d="M3 18h18"/><path d="M7 18a5 5 0 0 1 10 0"/><path d="M12 6v3M5.6 9.6l1.8 1.8M18.4 9.6l-1.8 1.8"/>',
+  "Hakuhodo":'<path d="M3 11c3 0 3-4 6-4s3 4 6 4 3-4 6-4"/><path d="M3 18c3 0 3-4 6-4s3 4 6 4 3-4 6-4"/>',
+  "Havas":'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  "Cheil":'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/>',
+  "Stagwell":'<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  "Independents & Networks":'<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.2 8.3l3.6 7.4M16.8 8.3l-3.6 7.4M8.5 6h7"/>',
+  "Consultancies & Other":'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>'
+};
+
+/* Tracked industry changes since the 2026 edition. "Latest" = edition + these ops. */
+const CHANGES = [
+  { id:"c1", date:"2026-11-02", status:"Completed", holdco:"Publicis Groupe",
+    title:"Publicis closes its $2.2B LiveRamp acquisition",
+    body:"LiveRamp leaves the independents and joins Publicis next to Epsilon. FTC clearance requires five years of neutral access to LiveRamp's products and firewalls around customer data. LiveRamp keeps its brand and CEO.",
+    sources:[["Adweek","https://www.adweek.com/agencies/publicis-closes-22-billion-liveramp-deal-we-arent-worried-about-competitors-leaving/"],["MediaPost","https://www.mediapost.com/publications/article/419178/publicis-completes-liveramp-acquisition.html"]],
+    ops:[{op:"move", from:["Independents & Networks","Independent agencies","LiveRamp"], to:["Publicis Groupe","Epsilon"]}] },
+  { id:"c2", date:"2026-04-02", status:"Announced", holdco:"Publicis Groupe",
+    title:"Publicis agrees to buy 160over90 from WME",
+    body:"The sports and culture agency (670+ staff) joins Publicis Sports inside Publicis Media. Price undisclosed; the WSJ put it above $500M. Public reporting reviewed does not confirm the close.",
+    sources:[["Publicis Groupe","https://www.publicisgroupe.com/en/news/press-releases/publicis-groupe-disrupts-sports-marketing-landscape-with-acquisition-of-160over90"],["Marketing Dive","https://www.marketingdive.com/news/publicis-sharpens-sports-marketing-focus-with-160over90-acquisition/816447/"]],
+    ops:[{op:"add", to:["Publicis Groupe","Publicis Media"], after:"Publicis Sport & Entertainment", item:{name:"160over90", tag:"EX"}}] },
+  { id:"c3", date:"2026-03-12", status:"Announced", holdco:"Publicis Groupe",
+    title:"Publicis acquires AdgeAI",
+    body:"Israel-based predictive creative analytics platform, bought from Publicis's stated 2026 M&A budget. Its home inside Publicis was not disclosed, so it sits under Other Agencies here.",
+    sources:[["ALM Corp","https://almcorp.com/blog/publicis-acquires-adgeai-predictive-creative-analytics/"]],
+    ops:[{op:"add", to:["Publicis Groupe","Other Agencies"], item:{name:"AdgeAI", tag:"DaC"}}] },
+  { id:"c4", date:"2026-02-26", status:"Completed", holdco:"WPP",
+    title:"WPP reorganizes into four units under Elevate28",
+    body:"Cindy Rose split WPP into WPP Creative, WPP Media, WPP Production and WPP Enterprise Solutions. WPP Creative, led by Jon Cook, holds VML, Ogilvy, AKQA, Landor and Design Bridge and Partners. Agency brands keep trading. Enterprise Solutions membership has not been published, so other WPP companies are listed separately.",
+    sources:[["Campaign","https://www.campaignlive.com/article/wpp-creative-will-not-sunset-agency-brands/1949808"],["Storyboard18","https://www.storyboard18.com/agency-news/wpp-is-no-longer-a-holding-company-cindy-rose-90904.htm"],["RTÉ","https://www.rte.ie/news/business/2026/0226/1560507-wpps-ceo-rose-to-merge-ad-agencies-in-turnaround-plan/"]],
+    ops:[
+      {op:"promote", from:["WPP","Other Agencies","Design Bridge and Partners"], group:"Design Bridge and Partners", tag:"Bal", movedTo:"WPP Creative"},
+      {op:"divisions", holdco:"WPP", list:[
+        ["WPP Creative",["AKQA Group","Landor Group","Ogilvy","VML","Design Bridge and Partners"]],
+        ["WPP Media",["WPP Media"]],
+        ["WPP Production",["WPP Production"]],
+        ["Other WPP companies",["Burson Group","Other Agencies","Practices"]]]}
+    ] },
+  { id:"c5", date:"2026-07-15", status:"Merging", holdco:"Omnicom",
+    title:"Omnicom merges Mediahub and Hearts & Science",
+    body:"Two of Omnicom Media's six agency brands combine into one global network with about $9.1B in billings. Nicole Estebanell leads the US business. The combined name was not confirmed in the sources reviewed.",
+    sources:[["BW Marketing World","https://www.bwmarketingworld.com/article/omnicom-merges-mediahub-and-hearts-science-into-new-global-network-615926"],["Storyboard18","https://www.storyboard18.com/advertising/omnicom-retires-ipg-mediabrands-folds-um-initiative-mediahub-into-single-omnicom-media-platform-after-merger-shake-up-85123.htm"]],
+    ops:[{op:"flag", target:["Omnicom","Hearts & Science"], mark:"merging"},{op:"flag", target:["Omnicom","Mediahub"], mark:"merging"}] },
+  { id:"c6", date:"2026-06-10", status:"Completed", holdco:"Havas",
+    title:"Havas takes a majority stake in Archrival",
+    body:"The US youth-culture and sports marketing agency joins Havas Play in North America. Co-founder and CEO Clint Runge stays on.",
+    sources:[["Variety","https://variety.com/2026/biz/news/havas-play-acquires-archrival-agency-1236771540/"],["Havas","https://havasmedianetwork.com/news/havas-accelerates-development-of-havas-play-in-north-america-through-the-acquisition-of-culture-and-sports-marketing-agency-archrival/"]],
+    ops:[{op:"add", to:["Havas","Havas Media Network"], after:"Havas Play", item:{name:"Archrival", tag:"EX", child:true}}] },
+  { id:"c7", date:"2026-07-01", status:"Completed", holdco:"Havas",
+    title:"Havas acquires SportVibes",
+    body:"Dutch sports marketing agency, added to Havas Play. Havas has closed eight majority-stake deals in 2026 through Q3.",
+    sources:[["Havas H1 2026 results","https://www.havas.com/press_release/havas-reports-solid-h1-2026-results-with-organic-growth-of-2-5-and-further-improvement-in-adjusted-ebit-margin/"]],
+    ops:[{op:"add", to:["Havas","Havas Media Network"], after:"Havas Play", item:{name:"SportVibes", tag:"EX", child:true}}] },
+  { id:"c8", date:"2026-10-26", status:"Announced", holdco:"Stagwell",
+    title:"Stagwell acquires Freestar",
+    body:"The publisher monetization partner (1,000+ publishers) joins Stagwell, extending the supply-side push that began with Stagwell Curate. Terms undisclosed.",
+    sources:[["AdExchanger","https://www.adexchanger.com/agencies/stagwell-acquires-publisher-monetization-network-freestar/"],["Stagwell","https://www.stagwellglobal.com/stagwell-stgw-acquires-freestar-leading-publisher-advertising-services-company/"]],
+    ops:[{op:"add", to:["Stagwell","Stagwell"], item:{name:"Freestar", tag:"DM"}}] },
+  { id:"c9", date:"2026-02-13", status:"Completed", holdco:"Dentsu",
+    title:"Dentsu drops the sale of its international business",
+    body:"No buyer emerged, so dentsu keeps the unit and will invest in it. Takeshi Sano became global CEO on 27 March 2026. The chart structure is unchanged.",
+    sources:[["Campaign","https://www.campaignlive.com/article/dentsu-drops-sale-international-arm-open-deals-local-markets/1948417"],["PPC Land","https://ppc.land/dentsu-abandons-international-sale-appoints-japan-chief-as-global-ceo-after-2-18-billion-loss/"]],
+    ops:[{op:"holdnote", holdco:"Dentsu"}] },
+  { id:"c10", date:"2026-05-08", status:"Completed", holdco:"Dentsu",
+    title:"Dentsu retires Carat, iProspect and Merkle locally in Australia and New Zealand",
+    body:"Local business now trades as dentsu. Carat and iProspect still serve global and regional clients, and the global brands are unchanged.",
+    sources:[["mi-3","https://www.mi-3.com.au/08-05-2026/carat-iprospect-brands-gone-australia-dentsu-unifies-media-business-single-local-agency"],["Marketing-Interactive","https://www.marketing-interactive.com/dentsu-folds-merkle-into-core-anz-business-as-simplification-drive-accelerates"]],
+    ops:[{op:"flag", target:["Dentsu","Carat"], mark:"note"},{op:"flag", target:["Dentsu","iProspect"], mark:"note"},{op:"flag", target:["Dentsu","Merkle"], mark:"note"}] },
+  { id:"c11", date:"2026-08-28", status:"Watch", holdco:"WPP",
+    title:"WPP and Bain prepare a full Kantar sale; Burson named as a possible disposal",
+    body:"WPP expects more than £200M of disposal proceeds in 2026. No sale of Burson had been confirmed as of mid-October 2026. Kantar is not on this chart.",
+    sources:[["M&A Insights","https://www.mainsights.io/ma-news/advertising-group-wpp-publ-and-bain-capital-plan-full-divestment-of-market-research-and-data-analytics-firm-kantar-with-advisors-to-be-appointed-in-autumn"],["Campaign","https://www.campaignlive.com/article/expect-wpps-strategy-review/1949623"]],
+    ops:[{op:"flag", target:["WPP","Burson Group"], mark:"watch"}] },
+  { id:"c12", date:"2026-11-17", status:"Completed", holdco:"Omnicom",
+    title:"Omnicom sells EP+Co to Bond as its $3.2B exit program continues",
+    body:"After the IPG deal Omnicom plans to exit about $3.2B of annual revenue; roughly $1B was gone by Q1, including Jack Morton, which now sits with the independents. EP+Co was not on the 2026 chart.",
+    sources:[["Campaign","https://www.campaignlive.com/article/omnicom-sells-creative-shop-ep+co-canadian-agency-bond/1975460"],["VideoWeek","https://videoweek.com/2026/04/29/omnicom-says-its-1-billion-into-its-3-2-billion-asset-sell-off/"]],
+    ops:[{op:"holdnote", holdco:"Omnicom"}] },
+  { id:"c13", date:"2026-10-01", status:"Reported", holdco:"Consultancies & Other",
+    title:"Manna Tree takes a majority stake in Zambezi",
+    body:"The health and wellness private equity firm invests in the independent creative agency, a Worldwide Partners member.",
+    sources:[["PrivSource","https://www.privsource.com/acquisitions/marketing-advertising/2026"]],
+    ops:[{op:"flag", target:["Consultancies & Other","Zambezi"], mark:"note"}] },
+  { id:"c14", date:"2025-11-17", status:"Watch", holdco:"Consultancies & Other",
+    title:"Consolidation talk with no deal: WPP–Havas and S4 Capital–MSQ",
+    body:"Havas told staff it is not in discussions with WPP. MSQ's owner said it will not pursue talks with S4 Capital. Both stay on the chart as they are and are listed for monitoring only.",
+    sources:[["MM+M","https://www.mmm-online.com/news/havas-not-in-discussions-for-wpp-takeover-ceo-tells-staff/"],["Adweek","https://www.adweek.com/agencies/msq-partners-rebuffs-any-potential-merger-talks-with-s4-capital/"]],
+    ops:[{op:"flag", target:["Consultancies & Other","S4 Capital"], mark:"watch"},{op:"flag", target:["Independents & Networks","MSQ"], mark:"watch"}] }
+];
+
+/* ---------- Model ---------- */
+function splitTag(s){ const i=s.lastIndexOf("|"); return i<0 ? [s.trim(),null] : [s.slice(0,i).trim(), s.slice(i+1).trim()]; }
+function parse(txt){
+  const out=[]; let h=null, g=null;
+  for(const raw of txt.split("\n")){
+    const line=raw.trim(); if(!line) continue;
+    if(line.startsWith("# ")){ h={name:line.slice(2).trim(), groups:[], notes:[]}; out.push(h); g=null; continue; }
+    if(line.startsWith("+ ")||line.startsWith("= ")){ const [n,t]=splitTag(line.slice(2)); g={name:n, tag:t, kind:line[0]==="+"?"group":"section", items:[]}; h.groups.push(g); continue; }
+    let child=false, l=line; if(l.startsWith("> ")){ child=true; l=l.slice(2); }
+    const [n,t]=splitTag(l); g.items.push({name:n, tag:t, child});
+  }
+  return out;
+}
+const BASE = parse(document.getElementById("base").textContent);
+const clone = o => JSON.parse(JSON.stringify(o));
+const H = (m,n) => m.find(x=>x.name===n);
+const G = (m,h,g) => H(m,h).groups.find(x=>x.name===g);
+
+function buildLatest(){
+  const m = clone(BASE);
+  const ordered = [...CHANGES].sort((a,b)=>a.date.localeCompare(b.date));
+  for(const c of ordered) for(const o of c.ops){
+    if(o.op==="move"||o.op==="promote"){
+      const grp=G(m,o.from[0],o.from[1]); const i=grp.items.findIndex(x=>x.name===o.from[2]); const it=grp.items[i];
+      grp.items[i]={name:it.name, tag:it.tag, ghost:true, movedTo:o.movedTo||o.to[0], change:c.id};
+      if(o.op==="move") G(m,o.to[0],o.to[1]).items.push({name:it.name, tag:it.tag, child:false, mark:"moved", change:c.id, from:o.from[0]});
+      else H(m,o.from[0]).groups.push({name:o.group, tag:o.tag, kind:"group", items:[], mark:"moved", change:c.id});
+    } else if(o.op==="add"){
+      const grp=G(m,o.to[0],o.to[1]); const it={...o.item, child:!!o.item.child, mark:"new", change:c.id};
+      if(o.after){ let i=grp.items.findIndex(x=>x.name===o.after); while(grp.items[i+1]&&grp.items[i+1].child) i++; grp.items.splice(i+1,0,it); }
+      else grp.items.push(it);
+    } else if(o.op==="flag"){
+      const hc=H(m,o.target[0]); let t=hc.groups.find(x=>x.name===o.target[1]);
+      if(!t) for(const gg of hc.groups){ t=gg.items.find(x=>x.name===o.target[1]); if(t) break; }
+      if(t){ t.mark=o.mark; t.change=c.id; }
+    } else if(o.op==="holdnote"){ H(m,o.holdco).notes.push(c.id); }
+    else if(o.op==="divisions"){
+      const hc=H(m,o.holdco); const next=[];
+      for(const [div,names] of o.list) for(const n of names){ const gg=hc.groups.find(x=>x.name===n); if(gg){ gg.division=div; gg.divChange=c.id; next.push(gg); } }
+      for(const gg of hc.groups) if(!next.includes(gg)) next.push(gg);
+      hc.groups=next;
+    }
+  }
+  return m;
+}
+const MODELS = { edition: BASE, latest: buildLatest() };
+
+/* ---------- State ---------- */
+const S = { v:"edition", tags:new Set(), marks:new Set(), q:"", hide:false };
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let INDEX = [];
+
+function badge(tag){ return tag ? `<span class="badge${DARK_TEXT.has(tag)?" dark":""}" style="--c:var(--${tag})" title="${esc(TAGS[tag])}">${tag}</span>` : ""; }
+function mk(mark){ return mark ? `<span class="mk" style="--mkc:var(--mk-${mark})">${MARKS[mark]}</span>` : ""; }
+const chg = id => CHANGES.find(c=>c.id===id);
+const fmtDate = d => new Date(d+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+
+/* ---------- Render tree ---------- */
+function render(){
+  const m = MODELS[S.v]; INDEX=[];
+  const latest = S.v==="latest";
+  const html = STACKS.map(stack => `<div class="stack">${stack.map(hn=>{
+    const hc=H(m,hn); let lastDiv=null;
+    const notes = latest ? hc.notes.map(id=>{ const c=chg(id); return `<button class="hnote" data-change="${id}" data-open-change="${id}"><small>${fmtDate(c.date)} · ${c.status}</small><b>${esc(c.title)}</b></button>`; }).join("") : "";
+    const groups = hc.groups.map(g=>{
+      let div="";
+      if(latest && g.division && g.division!==lastDiv){ lastDiv=g.division; div=`<button class="division" data-change="${g.divChange}" data-open-change="${g.divChange}">${esc(g.division)}</button>`; }
+      const gi = INDEX.push({type:"group", g, hc:hn})-1;
+      const items = g.items.map(it=>{
+        const k = INDEX.push({type:"item", it, g, hc:hn})-1;
+        if(it.ghost) return `<button class="row ghost${it.child?" child":""}" data-k="${k}" data-ghost="1" data-change="${it.change}" data-name="${esc(it.name.toLowerCase())}"><span class="nm"><s>${esc(it.name)}</s></span><span class="to">→ ${esc(it.movedTo)}</span></button>`;
+        return `<button class="row${it.child?" child":""}" data-k="${k}" data-tag="${it.tag||""}" data-mark="${latest&&it.mark?it.mark:""}" ${latest&&it.change?`data-change="${it.change}"`:""} data-name="${esc(it.name.toLowerCase())}"><span class="nm">${esc(it.name)}</span>${latest?mk(it.mark):""}${badge(it.tag)}</button>`;
+      }).join("");
+      const real = g.items.filter(x=>!x.ghost).length;
+      const head = `<button class="ghead${g.kind==="section"?" section":""}" data-k="${gi}" data-gtoggle="1" data-tag="${g.tag||""}" data-mark="${latest&&g.mark?g.mark:""}" ${latest&&g.change?`data-change="${g.change}"`:""} data-name="${esc(g.name.toLowerCase())}" aria-expanded="true">${g.kind==="group"?'<span class="plus" aria-hidden="true"></span>':""}<span class="gn">${esc(g.name)} ${real?`<span class="gcount">(${real})</span>`:""}</span>${latest?mk(g.mark):""}${badge(g.tag)}</button>`;
+      return `${div}<div class="gblock">${head}${real||g.items.length?`<div class="items">${items}</div>`:""}</div>`;
+    }).join("");
+    return `<section class="holdco" aria-label="${esc(hn)}"><h2 class="hname"><span class="hicon" aria-hidden="true"><svg viewBox="0 0 24 24">${HOLDCO_ICONS[hn]||""}</svg></span><span class="hn">${esc(hn)}</span><span class="hcount" title="Agencies in this column">${hc.groups.reduce((n,g)=>n+(g.tag?1:0)+g.items.filter(x=>!x.ghost).length,0)}</span></h2>${notes}${groups}</section>`;
+  }).join("")}</div>`).join("");
+  $("#tree").innerHTML = html;
+  $("#bandVer").textContent = latest ? `· Latest ${SYNCED}` : "";
+  renderLegend(); renderStats(); applyFilters();
+}
+
+/* ---------- Counts & stats ---------- */
+function counts(m){
+  const tags={}, marks={}; let agencies=0, groups=0;
+  for(const h of m) for(const g of h.groups){
+    if(g.kind==="group") groups++;
+    if(g.tag){ tags[g.tag]=(tags[g.tag]||0)+1; agencies++; }
+    if(g.mark) marks[g.mark]=(marks[g.mark]||0)+1;
+    for(const it of g.items){ if(it.ghost) continue; agencies++; if(it.tag) tags[it.tag]=(tags[it.tag]||0)+1; if(it.mark) marks[it.mark]=(marks[it.mark]||0)+1; }
+  }
+  return {tags, marks, agencies, groups};
+}
+function renderStats(){
+  const c=counts(MODELS[S.v]);
+  let s = `<span><b>${c.agencies}</b> agencies</span><span><b>${c.groups}</b> agency groups</span><span><b>10</b> holding companies &amp; networks</span>`;
+  if(S.v==="latest"){
+    const base=counts(BASE);
+    const d=c.agencies-base.agencies;
+    s += `<span class="d-new">${d>=0?"+":""}${d} vs 2026 Edition</span><span>${c.marks.new||0} new · ${c.marks.moved||0} moved · ${c.marks.merging||0} merging · ${(c.marks.note||0)+(c.marks.watch||0)} flagged</span>`;
+  } else {
+    s += `<span>Switch to <b>Latest</b> to see ${CHANGES.length} tracked changes</span>`;
+  }
+  $("#stats").innerHTML = s;
+  $("#chgCount").textContent = CHANGES.length;
+}
+
+/* ---------- Legend ---------- */
+function renderLegend(){
+  const c=counts(MODELS[S.v]);
+  let h = `<button class="lg" data-lg="group" aria-pressed="false" title="Expand or collapse every agency group"><span class="plus" aria-hidden="true"></span>Agency Group <span class="n">${c.groups}</span></button><span class="lg-sep" aria-hidden="true"></span>`;
+  h += Object.entries(TAGS).map(([k,l])=>`<button class="lg" data-tagf="${k}" aria-pressed="${S.tags.has(k)}">${badge(k)}${l} <span class="n">${c.tags[k]||0}</span></button>`).join("");
+  if(S.v==="latest"){
+    h += `<span class="lg-sep" aria-hidden="true"></span>` + Object.entries(MARKS).map(([k,l])=>`<button class="lg" data-markf="${k}" aria-pressed="${S.marks.has(k)}"><span class="mkdot" style="--mkc:var(--mk-${k})">${(c.marks[k]||0)}</span>${l}</button>`).join("");
+  }
+  $("#legend").innerHTML = h;
+  $("#legend").classList.toggle("active", S.tags.size+S.marks.size>0);
+}
+
+/* ---------- Filtering ---------- */
+function applyFilters(){
+  const tree=$("#tree"); const q=S.q.trim().toLowerCase();
+  const active = S.tags.size>0 || S.marks.size>0 || q.length>0;
+  tree.classList.toggle("filtering", active); tree.classList.toggle("hide", active && S.hide);
+  const test = el => {
+    if(el.dataset.ghost) return !S.tags.size && !S.marks.size && (!q || el.dataset.name.includes(q));
+    const t=el.dataset.tag, mkv=el.dataset.mark, n=el.dataset.name;
+    if(S.tags.size && !S.tags.has(t)) return false;
+    if(S.marks.size && !S.marks.has(mkv)) return false;
+    if(q && !n.includes(q)) return false;
+    return true;
+  };
+  tree.querySelectorAll(".row, .ghead").forEach(el=>{
+    const nm=el.querySelector(".nm, .gn"); const real = el.classList.contains("ghead") ? INDEX[el.dataset.k].g.name : INDEX[el.dataset.k].it.name;
+    const target = el.dataset.ghost ? nm.querySelector("s") : (el.classList.contains("ghead") ? null : nm);
+    if(target) target.innerHTML = q ? hl(real,q) : esc(real);
+    if(!active){ el.classList.remove("on","off"); return; }
+    const ok=test(el); el.classList.toggle("on",ok); el.classList.toggle("off",!ok);
+  });
+  tree.querySelectorAll(".gblock").forEach(b=>{
+    const any = !active || b.querySelector(".row.on, .ghead.on");
+    b.classList.toggle("empty", !any);
+    if(active && S.hide && b.querySelector(".row.on")) { b.classList.remove("collapsed"); b.querySelector(".ghead").setAttribute("aria-expanded","true"); }
+  });
+  tree.querySelectorAll(".holdco").forEach(h=>{
+    h.classList.toggle("empty", active && !h.querySelector(".gblock:not(.empty)"));
+    let div=null;
+    h.querySelectorAll(".division, .gblock").forEach(x=>{ if(x.classList.contains("division")){ div=x; div.classList.add("empty"); } else if(div && !x.classList.contains("empty")) div.classList.remove("empty"); });
+    h.querySelectorAll(".hnote").forEach(n=>n.classList.toggle("empty", active));
+  });
+  $("#clearF").hidden = !active;
+  $("#legend").classList.toggle("active", S.tags.size+S.marks.size>0);
+}
+function hl(name,q){ const i=name.toLowerCase().indexOf(q); if(i<0) return esc(name); return esc(name.slice(0,i))+"<mark>"+esc(name.slice(i,i+q.length))+"</mark>"+esc(name.slice(i+q.length)); }
+
+/* ---------- Detail drawer ---------- */
+function changeBlock(id){
+  const c=chg(id); if(!c) return "";
+  return `<div class="dchange"><span class="st" style="--sc:${STATUS[c.status]}">${c.status}</span> <span class="dk">${fmtDate(c.date)}</span>
+    <div class="ctitle">${esc(c.title)}</div><p class="cbody">${esc(c.body)}</p>
+    <div class="cmeta">${c.sources.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${esc(n)} ↗</a>`).join("")}</div></div>`;
+}
+function openItem(k){
+  const e=INDEX[k]; const d=$("#drawer"); const latest=S.v==="latest";
+  let html=`<button class="x" id="dx" aria-label="Close details">×</button>`;
+  if(e.type==="item"){
+    const it=e.it;
+    html+=`<div class="dk">${it.ghost?"Moved out":"Agency"}</div><div class="dname">${esc(it.name)}</div>
+      <div class="dpath">${esc(e.hc)} › ${esc(e.g.name)}</div>`;
+    if(it.tag) html+=`<div class="dtag">${badge(it.tag)}<span>${TAGS[it.tag]}</span></div>`;
+    const sibs=e.g.items.filter(x=>!x.ghost && x!==it);
+    if(sibs.length) html+=`<div class="dsibs"><span class="dk">Also in ${esc(e.g.name)}</span><br>${sibs.slice(0,12).map(s=>esc(s.name)).join(" · ")}${sibs.length>12?` · +${sibs.length-12} more`:""}</div>`;
+    if(latest && it.change) html+=changeBlock(it.change);
+  } else {
+    const g=e.g; const real=g.items.filter(x=>!x.ghost);
+    html+=`<div class="dk">${g.kind==="group"?"Agency group":"Section"}</div><div class="dname">${esc(g.name)}</div><div class="dpath">${esc(e.hc)}${g.division&&latest?" › "+esc(g.division):""} · ${real.length||1} ${real.length===1||!real.length?"agency":"agencies"}</div>`;
+    if(g.tag) html+=`<div class="dtag">${badge(g.tag)}<span>${TAGS[g.tag]}</span></div>`;
+    const mix={}; real.forEach(x=>{ if(x.tag) mix[x.tag]=(mix[x.tag]||0)+1; });
+    const mixStr=Object.entries(mix).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`${badge(t)} ${n}`).join(" ");
+    if(mixStr) html+=`<div class="dsibs"><span class="dk">Service mix</span><div style="display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.35rem">${mixStr}</div></div>`;
+    if(latest && g.change) html+=changeBlock(g.change);
+  }
+  d.innerHTML=html; d.hidden=false; $("#dx").focus({preventScroll:true});
+}
+function openChange(id){
+  const d=$("#drawer"); d.innerHTML=`<button class="x" id="dx" aria-label="Close details">×</button><div class="dk">Tracked change</div>${changeBlock(id)}`; d.hidden=false;
+}
+
+/* ---------- Changelog ---------- */
+function renderLog(){
+  const list=[...CHANGES].sort((a,b)=>b.date.localeCompare(a.date));
+  $("#clogLede").textContent = `${CHANGES.length} changes tracked from trade press and company filings, last synced ${SYNCED}. Most recent first.`;
+  $("#clog").innerHTML = list.map(c=>`<li><div class="cdate">${fmtDate(c.date)}<span class="st" style="--sc:${STATUS[c.status]}">${c.status}</span></div>
+    <div><div class="ctitle">${esc(c.title)}</div><p class="cbody">${esc(c.body)}</p>
+    <div class="cmeta"><span class="hc">${esc(c.holdco)}</span><button data-show="${c.id}">Show on chart</button>${c.sources.map(([n,u])=>`<a href="${u}" target="_blank" rel="noopener">${esc(n)} ↗</a>`).join("")}</div></div></li>`).join("");
+}
+function showOnChart(id){
+  if(S.v!=="latest") setVersion("latest");
+  S.tags.clear(); S.marks.clear(); S.q=""; $("#q").value=""; renderLegend(); applyFilters();
+  const els=[...document.querySelectorAll(`#tree [data-change="${id}"]`)];
+  if(!els.length) return;
+  els.forEach(el=>{ const b=el.closest(".gblock"); if(b){ b.classList.remove("collapsed"); } });
+  els[0].scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"center"});
+  els.forEach(el=>{ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); });
+  openChange(id);
+}
+
+/* ---------- Version switch ---------- */
+function setVersion(v, fromHash){
+  S.v=v; S.marks.clear();
+  $("#vEdition").setAttribute("aria-pressed", v==="edition"); $("#vLatest").setAttribute("aria-pressed", v==="latest");
+  $("#syncLbl").textContent = v==="latest" ? `Synced with industry news · ${SYNCED}` : "As published · Global 2026 PDF";
+  $("#drawer").hidden=true;
+  if(!fromHash){ try{ history.replaceState(null,"", v==="latest"?"#latest":"#edition-2026"); }catch(e){} }
+  render();
+}
+
+/* ---------- Events ---------- */
+$("#vEdition").addEventListener("click",()=>setVersion("edition"));
+$("#vLatest").addEventListener("click",()=>setVersion("latest"));
+$("#q").addEventListener("input",e=>{ S.q=e.target.value; applyFilters(); });
+$("#hideMode").addEventListener("change",e=>{ S.hide=e.target.checked; applyFilters(); });
+$("#clearF").addEventListener("click",()=>{ S.tags.clear(); S.marks.clear(); S.q=""; $("#q").value=""; renderLegend(); applyFilters(); });
+$("#collapseAll").addEventListener("click",e=>{
+  const blocks=[...document.querySelectorAll("#tree .gblock")].filter(b=>b.querySelector(".items"));
+  const collapse = blocks.some(b=>!b.classList.contains("collapsed"));
+  blocks.forEach(b=>{ b.classList.toggle("collapsed",collapse); b.querySelector(".ghead").setAttribute("aria-expanded",String(!collapse)); });
+  e.currentTarget.textContent = collapse ? "Expand all groups" : "Collapse all groups";
+  const lg=document.querySelector('[data-lg="group"]'); if(lg) lg.setAttribute("aria-pressed",String(collapse));
+});
+$("#dockToggle").addEventListener("click",e=>{
+  const d=$("#dock"); const min=d.classList.toggle("min");
+  e.currentTarget.textContent = min ? "Show legend" : "Hide legend"; e.currentTarget.setAttribute("aria-expanded",String(!min));
+});
+$("#tree").addEventListener("click",e=>{
+  const oc=e.target.closest("[data-open-change]"); if(oc){ openChange(oc.dataset.openChange); return; }
+  const gh=e.target.closest(".ghead");
+  if(gh){
+    const b=gh.closest(".gblock");
+    if(e.target.closest(".plus") || (b.querySelector(".items") && !e.target.closest(".badge,.mk"))){
+      if(b.querySelector(".items") && (e.target.closest(".plus") || !e.altKey)){
+        const c=b.classList.toggle("collapsed"); gh.setAttribute("aria-expanded",String(!c));
+        if(e.target.closest(".plus")) return;
+      }
+    }
+    openItem(+gh.dataset.k); return;
+  }
+  const r=e.target.closest(".row"); if(r) openItem(+r.dataset.k);
+});
+$("#legend").addEventListener("click",e=>{
+  const b=e.target.closest(".lg"); if(!b) return;
+  if(b.dataset.lg==="group"){ $("#collapseAll").click(); return; }
+  const set = b.dataset.tagf ? S.tags : S.marks; const key = b.dataset.tagf || b.dataset.markf;
+  set.has(key) ? set.delete(key) : set.add(key);
+  b.setAttribute("aria-pressed", String(set.has(key)));
+  $("#tree").classList.remove("previewing"); applyFilters();
+});
+$("#legend").addEventListener("mouseover",e=>{
+  const b=e.target.closest(".lg[data-tagf], .lg[data-markf]"); const tree=$("#tree");
+  if(!b || S.tags.size || S.marks.size || S.q){ tree.classList.remove("previewing"); return; }
+  const attr = b.dataset.tagf ? ["tag",b.dataset.tagf] : ["mark",b.dataset.markf];
+  tree.querySelectorAll(".row, .ghead").forEach(el=>el.classList.toggle("pv", el.dataset[attr[0]]===attr[1]));
+  tree.classList.add("previewing");
+});
+$("#legend").addEventListener("mouseleave",()=>$("#tree").classList.remove("previewing"));
+$("#about").addEventListener("click",e=>{ const b=e.target.closest("[data-show]"); if(b) showOnChart(b.dataset.show); });
+$("#drawer").addEventListener("click",e=>{ if(e.target.closest("#dx")) $("#drawer").hidden=true; });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape") $("#drawer").hidden=true;
+  if(e.key==="/" && document.activeElement!==$("#q")){ e.preventDefault(); $("#q").focus(); }
+});
+window.addEventListener("hashchange",()=>setVersion(location.hash==="#latest"?"latest":"edition",true));
+
+/* ---------- Theme: system → light → dark ---------- */
+const THEME_ICONS = {
+  system:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+  light:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  dark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>'
+};
+const THEME_LABEL = { system:"Auto", light:"Light", dark:"Dark" };
+let theme = "system";
+try { const t=localStorage.getItem("aft-theme"); if(t==="light"||t==="dark") theme=t; } catch(e){}
+const darkMQ = matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(){
+  const root=document.documentElement;
+  if(theme==="system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme",theme);
+  const isDark = theme==="dark" || (theme==="system" && darkMQ.matches);
+  const tc=document.getElementById("themeColor"); if(tc) tc.setAttribute("content", isDark ? "#0d0e1f" : "#ffffff");
+  const b=$("#themeBtn"); b.innerHTML = THEME_ICONS[theme] + THEME_LABEL[theme];
+  const next = {system:"light", light:"dark", dark:"system"}[theme];
+  b.setAttribute("aria-label", `Theme: ${THEME_LABEL[theme]}. Switch to ${THEME_LABEL[next]}`); b.title = `Theme: ${THEME_LABEL[theme]} (click for ${THEME_LABEL[next]})`;
+}
+$("#themeBtn").addEventListener("click",()=>{
+  theme = {system:"light", light:"dark", dark:"system"}[theme];
+  try { theme==="system" ? localStorage.removeItem("aft-theme") : localStorage.setItem("aft-theme",theme); } catch(e){}
+  applyTheme();
+});
+darkMQ.addEventListener?.("change",()=>{ if(theme==="system") applyTheme(); });
+applyTheme();
+
+renderLog();
+setVersion(location.hash==="#latest" ? "latest" : "edition", true);
+</script>
+</body>
+</html>
